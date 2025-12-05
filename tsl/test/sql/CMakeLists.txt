@@ -136,7 +136,6 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     cagg_drop_chunks.sql
     cagg_dump.sql
     cagg_joins.sql
-    cagg_migrate.sql
     cagg_multi.sql
     cagg_on_cagg.sql
     cagg_on_cagg_joins.sql
@@ -158,7 +157,6 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     license_tsl.sql
     merge_chunks.sql
     fixed_schedules.sql
-    partialize_finalize.sql
     recompress_chunk_segmentwise.sql
     feature_flags.sql
     vector_agg_byte.sql
@@ -176,7 +174,6 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     cagg_bgw.sql.in
     cagg_ddl.sql.in
     cagg_migrate_function.sql.in
-    cagg_repair.sql.in
     cagg_usage.sql.in
     compression_update_delete.sql.in
     continuous_aggs.sql.in

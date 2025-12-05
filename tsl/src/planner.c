@@ -24,7 +24,6 @@
 #include "nodes/skip_scan/skip_scan.h"
 #include "nodes/vector_agg/plan.h"
 #include "planner.h"
-#include "planner/partialize.h"
 
 #include <math.h>
 
@@ -175,6 +174,30 @@ tsl_preprocess_query(Query *parse, int *cursor_opts)
 		cagg_sort_pushdown(parse, cursor_opts);
 	}
 #endif
+}
+
+/*
+ * Replaces pathkeys in tsl-specific custom path types during sort transformation.
+ *
+ * This hook is called from ts_sort_transform_replace_pathkeys() in sort_transform.c
+ * after the basic pathkey replacement has been performed. It handles tsl-specific
+ * path types (such as ColumnarScan) that contain additional pathkey fields beyond
+ * the standard path.pathkeys field.
+ */
+void
+tsl_sort_transform_replace_pathkeys(void *path, List *transformed_pathkeys, List *original_pathkeys)
+{
+	if (!path)
+		return;
+	if (ts_is_columnar_scan_path(path))
+	{
+		ColumnarScanPath *dcpath = (ColumnarScanPath *) path;
+		if (compare_pathkeys(dcpath->required_compressed_pathkeys, transformed_pathkeys) ==
+			PATHKEYS_EQUAL)
+		{
+			dcpath->required_compressed_pathkeys = original_pathkeys;
+		}
+	}
 }
 
 /*

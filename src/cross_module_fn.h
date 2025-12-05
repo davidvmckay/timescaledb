@@ -80,6 +80,8 @@ typedef struct CrossModuleFunctions
 	void (*set_rel_pathlist_dml)(PlannerInfo *, RelOptInfo *, Index, RangeTblEntry *, Hypertable *);
 	void (*set_rel_pathlist_query)(PlannerInfo *, RelOptInfo *, Index, RangeTblEntry *,
 								   Hypertable *);
+	void (*sort_transform_replace_pathkeys)(void *path, List *transformed_pathkeys,
+											List *original_pathkeys);
 
 	/* gapfill */
 	PGFunction gapfill_marker;
@@ -98,9 +100,6 @@ typedef struct CrossModuleFunctions
 	void (*tsl_postprocess_plan)(PlannedStmt *stmt);
 
 	/* Continuous Aggregates */
-	PGFunction partialize_agg;
-	PGFunction finalize_agg_sfunc;
-	PGFunction finalize_agg_ffunc;
 	DDLResult (*process_cagg_viewstmt)(Node *stmt, const char *query_string, void *pstmt,
 									   WithClauseResult *with_clause_options);
 	PGFunction continuous_agg_refresh;
@@ -117,7 +116,6 @@ typedef struct CrossModuleFunctions
 	PGFunction continuous_agg_get_bucket_function;
 	PGFunction continuous_agg_get_bucket_function_info;
 	PGFunction continuous_agg_migrate_to_time_bucket;
-	PGFunction cagg_try_repair;
 	PGFunction continuous_agg_read_invalidation_record;
 
 	PGFunction compressed_data_send;

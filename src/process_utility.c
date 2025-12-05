@@ -2140,7 +2140,8 @@ process_reindex(ProcessUtilityArgs *args)
 				ts_hypertable_permissions_check_by_id(ht->fd.id);
 				if (get_reindex_options(stmt) & REINDEXOPT_CONCURRENTLY)
 					ereport(ERROR,
-							(errmsg("concurrent index creation on hypertables is not supported")));
+							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							 errmsg("concurrent index creation on hypertables is not supported")));
 
 				if (foreach_chunk(ht, reindex_chunk, args) >= 0)
 					result = DDL_DONE;
@@ -3304,23 +3305,7 @@ process_index_start(ProcessUtilityArgs *args)
 
 		if (cagg)
 		{
-			/* If the relation is a CAgg and it is finalized */
-			if (ContinuousAggIsFinalized(cagg))
-			{
-				ht = ts_hypertable_get_by_id(cagg->data.mat_hypertable_id);
-			}
-			else
-			{
-				ts_cache_release(&hcache);
-				ereport(ERROR,
-						(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-						 errmsg("operation not supported on continuous aggregates that are not "
-								"finalized"),
-						 errhint("Run \"CALL cagg_migrate('%s.%s');\" to migrate to the new "
-								 "format.",
-								 NameStr(cagg->data.user_view_schema),
-								 NameStr(cagg->data.user_view_name))));
-			}
+			ht = ts_hypertable_get_by_id(cagg->data.mat_hypertable_id);
 		}
 
 		if (!ht)

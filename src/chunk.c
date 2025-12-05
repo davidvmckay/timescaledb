@@ -4198,7 +4198,6 @@ ts_chunk_do_drop_chunks(Hypertable *ht, int64 older_than, int64 newer_than, int3
 		}
 	}
 
-	bool all_caggs_finalized = ts_continuous_agg_hypertable_all_finalized(hypertable_id);
 	List *dropped_chunk_names = NIL;
 	for (uint64 i = 0; i < num_chunks; i++)
 	{
@@ -4221,10 +4220,7 @@ ts_chunk_do_drop_chunks(Hypertable *ht, int64 older_than, int64 newer_than, int3
 		chunk_name = psprintf("%s.%s", schema_name, table_name);
 		dropped_chunk_names = lappend(dropped_chunk_names, chunk_name);
 
-		if (has_continuous_aggs && !all_caggs_finalized)
-			ts_chunk_drop_preserve_catalog_row(chunks + i, DROP_RESTRICT, log_level);
-		else
-			ts_chunk_drop(chunks + i, DROP_RESTRICT, log_level);
+		ts_chunk_drop(chunks + i, DROP_RESTRICT, log_level);
 	}
 	// if we have tiered chunks cascade drop to tiering layer as well
 	if (osm_chunk_id != INVALID_CHUNK_ID)
@@ -5048,7 +5044,8 @@ ts_chunk_merge_on_dimension(const Hypertable *ht, Chunk *chunk, const Chunk *mer
 
 	if (!dimension_slice_found)
 		ereport(ERROR,
-				(errmsg("cannot find slice for merging dimension"),
+				(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
+				 errmsg("cannot find slice for merging dimension"),
 				 errhint("chunk 1: \"%s\", chunk 2: \"%s\", dimension ID %d",
 						 get_rel_name(chunk->table_id),
 						 get_rel_name(merge_chunk->table_id),
@@ -5056,7 +5053,8 @@ ts_chunk_merge_on_dimension(const Hypertable *ht, Chunk *chunk, const Chunk *mer
 
 	if (slice->fd.range_end != merge_slice->fd.range_start)
 		ereport(ERROR,
-				(errmsg("cannot merge non-adjacent chunks over supplied dimension"),
+				(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
+				 errmsg("cannot merge non-adjacent chunks over supplied dimension"),
 				 errhint("chunk 1: \"%s\", chunk 2: \"%s\", dimension ID %d",
 						 get_rel_name(chunk->table_id),
 						 get_rel_name(merge_chunk->table_id),
@@ -5070,7 +5068,8 @@ ts_chunk_merge_on_dimension(const Hypertable *ht, Chunk *chunk, const Chunk *mer
 	 */
 	if (num_ccs <= 0)
 		ereport(ERROR,
-				(errmsg("missing chunk constraint for dimension slice"),
+				(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
+				 errmsg("missing chunk constraint for dimension slice"),
 				 errhint("chunk: \"%s\", slice ID %d",
 						 get_rel_name(chunk->table_id),
 						 slice->fd.id)));
@@ -5117,7 +5116,8 @@ ts_chunk_merge_on_dimension(const Hypertable *ht, Chunk *chunk, const Chunk *mer
 
 	if (num_ccs <= 0)
 		ereport(ERROR,
-				(errmsg("missing chunk constraint for merged dimension slice"),
+				(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
+				 errmsg("missing chunk constraint for merged dimension slice"),
 				 errhint("chunk: \"%s\", slice ID %d",
 						 get_rel_name(chunk->table_id),
 						 new_slice->fd.id)));
@@ -5259,7 +5259,7 @@ ts_chunk_get_osm_chunk_id(int hypertable_id)
 	if (num_found > 1)
 	{
 		ereport(ERROR,
-				(errcode(ERRCODE_TS_INTERNAL_ERROR),
+				(errcode(ERRCODE_INTERNAL_ERROR),
 				 errmsg("More than 1 OSM chunk found for hypertable (%d)", hypertable_id)));
 	}
 
